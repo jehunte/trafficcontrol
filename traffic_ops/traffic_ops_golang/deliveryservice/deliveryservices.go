@@ -161,7 +161,6 @@ func CreateV14(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice creation was successful.", []tc.DeliveryServiceNullableV14{*res})
 }
 
-// 	TODO allow users to post names (type, cdn, etc) and get the IDs from the names. This isn't trivial to do in a single query, without dynamically building the entire insert query, and ideally inserting would be one query. But it'd be much more convenient for users. Alternatively, remove IDs from the database entirely and use real candidate keys.
 func CreateV15(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -182,6 +181,29 @@ func CreateV15(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice creation was successful.", []tc.DeliveryServiceNullableV15{*res})
+}
+
+// 	TODO allow users to post names (type, cdn, etc) and get the IDs from the names. This isn't trivial to do in a single query, without dynamically building the entire insert query, and ideally inserting would be one query. But it'd be much more convenient for users. Alternatively, remove IDs from the database entirely and use real candidate keys.
+func CreateV16(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	ds := tc.DeliveryServiceNullableV16{}
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
+		return
+	}
+
+	res, status, userErr, sysErr := createV16(w, r, inf, ds)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
+		return
+	}
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice creation was successful.", []tc.DeliveryServiceNullableV16{*res})
 }
 
 func createV12(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS tc.DeliveryServiceNullableV12) (*tc.DeliveryServiceNullableV12, int, error, error) {
@@ -211,8 +233,17 @@ func createV14(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 	return nil, status, userErr, sysErr
 }
 
-// create creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
 func createV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS tc.DeliveryServiceNullableV15) (*tc.DeliveryServiceNullableV15, int, error, error) {
+	dsV16 := tc.DeliveryServiceNullableV16{DeliveryServiceNullableV15: reqDS}
+	res, status, userErr, sysErr := createV16(w, r, inf, dsV16)
+	if res != nil {
+		return &res.DeliveryServiceNullableV15, status, userErr, sysErr
+	}
+	return nil, status, userErr, sysErr
+}
+
+// create creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
+func createV16(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS tc.DeliveryServiceNullableV16) (*tc.DeliveryServiceNullableV16, int, error, error) {
 	ds := tc.DeliveryServiceNullable(reqDS)
 	user := inf.User
 	tx := inf.Tx.Tx
@@ -280,6 +311,7 @@ func createV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 		&ds.RegionalGeoBlocking,
 		&ds.RemapText,
 		&ds.RoutingName,
+		&ds.ServiceCategoryId,
 		&ds.SigningAlgorithm,
 		&ds.SSLKeyVersion,
 		&ds.TenantID,
@@ -371,7 +403,7 @@ func createV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 		return nil, http.StatusInternalServerError, nil, errors.New("error writing to audit log: " + err.Error())
 	}
 
-	dsLatest := tc.DeliveryServiceNullableV15(ds)
+	dsLatest := tc.DeliveryServiceNullableV16(ds)
 	return &dsLatest, http.StatusOK, nil, nil
 }
 
@@ -541,6 +573,31 @@ func UpdateV15(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice update was successful.", []tc.DeliveryServiceNullableV15{*res})
 }
 
+func UpdateV16(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	id := inf.IntParams["id"]
+
+	ds := tc.DeliveryServiceNullableV16{}
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
+		return
+	}
+	ds.ID = &id
+
+	res, status, userErr, sysErr := updateV16(w, r, inf, &ds)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
+		return
+	}
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice update was successful.", []tc.DeliveryServiceNullableV16{*res})
+}
+
 func updateV12(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *tc.DeliveryServiceNullableV12) (*tc.DeliveryServiceNullableV12, int, error, error) {
 	dsV13 := tc.DeliveryServiceNullableV13{DeliveryServiceNullableV12: *reqDS}
 	// query the DB for existing 1.3 fields in order to "upgrade" this 1.2 request into a 1.3 request
@@ -635,6 +692,31 @@ WHERE
 }
 
 func updateV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *tc.DeliveryServiceNullableV15) (*tc.DeliveryServiceNullableV15, int, error, error) {
+	dsV16 := tc.DeliveryServiceNullableV16{DeliveryServiceNullableV15: *reqDS}
+	// query the DB for existing 1.5 fields in order to "upgrade" this 1.4 request into a 1.5 request
+	query := `
+SELECT
+  ds.service_category
+FROM
+  deliveryservice ds
+WHERE
+  ds.id = $1`
+	if err := inf.Tx.Tx.QueryRow(query, *reqDS.ID).Scan(
+		&dsV16.ServiceCategoryId,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, http.StatusNotFound, fmt.Errorf("delivery service ID %d not found", *dsV16.ID), nil
+		}
+		return nil, http.StatusInternalServerError, nil, fmt.Errorf("querying delivery service ID %d: %s", *dsV16.ID, err.Error())
+	}
+	res, status, userErr, sysErr := updateV16(w, r, inf, &dsV16)
+	if res != nil {
+		return &res.DeliveryServiceNullableV15, status, userErr, sysErr
+	}
+	return nil, status, userErr, sysErr
+}
+
+func updateV16(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *tc.DeliveryServiceNullableV16) (*tc.DeliveryServiceNullableV16, int, error, error) {
 	converted := tc.DeliveryServiceNullable(*reqDS)
 	ds := &converted
 	tx := inf.Tx.Tx
@@ -724,6 +806,7 @@ func updateV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 		&ds.RegionalGeoBlocking,
 		&ds.RemapText,
 		&ds.RoutingName,
+		&ds.ServiceCategoryId,
 		&ds.SigningAlgorithm,
 		&ds.SSLKeyVersion,
 		&ds.TenantID,
@@ -834,7 +917,7 @@ func updateV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 	if err := api.CreateChangeLogRawErr(api.ApiChange, "Updated ds: "+*ds.XMLID+" id: "+strconv.Itoa(*ds.ID), user, tx); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("writing change log entry: " + err.Error())
 	}
-	dsLatest := tc.DeliveryServiceNullableV15(*ds)
+	dsLatest := tc.DeliveryServiceNullableV16(*ds)
 	return &dsLatest, http.StatusOK, nil, nil
 }
 
@@ -904,6 +987,7 @@ func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.C
 		"logsEnabled":      dbhelpers.WhereColumnInfo{"ds.logs_enabled", api.IsBool},
 		"tenant":           dbhelpers.WhereColumnInfo{"ds.tenant_id", api.IsInt},
 		"signingAlgorithm": dbhelpers.WhereColumnInfo{"ds.signing_algorithm", nil},
+		"serviceCategory":  dbhelpers.WhereColumnInfo{"ds.service_category", api.IsInt},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
@@ -1128,6 +1212,8 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 			&ds.RegionalGeoBlocking,
 			&ds.RemapText,
 			&ds.RoutingName,
+			&ds.ServiceCategoryId,
+			&ds.ServiceCategoryName,
 			&ds.SigningAlgorithm,
 			&ds.RangeSliceBlockSize,
 			&ds.SSLKeyVersion,
@@ -1648,6 +1734,8 @@ ds.regex_remap,
 ds.regional_geo_blocking,
 ds.remap_text,
 ds.routing_name,
+ds.service_category,
+service_category.name as service_category_name,
 ds.signing_algorithm,
 ds.range_slice_block_size,
 ds.ssl_key_version,
@@ -1664,6 +1752,7 @@ JOIN type ON ds.type = type.id
 JOIN cdn ON ds.cdn_id = cdn.id
 LEFT JOIN profile ON ds.profile = profile.id
 LEFT JOIN tenant ON ds.tenant_id = tenant.id
+LEFT JOIN service_category ON ds.service_category = service_category.id
 `
 }
 
@@ -1713,18 +1802,19 @@ regex_remap=$39,
 regional_geo_blocking=$40,
 remap_text=$41,
 routing_name=$42,
-signing_algorithm=$43,
-ssl_key_version=$44,
-tenant_id=$45,
-tr_request_headers=$46,
-tr_response_headers=$47,
-type=$48,
-xml_id=$49,
-anonymous_blocking_enabled=$50,
-consistent_hash_regex=$51,
-max_origin_connections=$52,
-ecs_enabled=$53,
-range_slice_block_size=$54
+service_category=$43,
+signing_algorithm=$44,
+ssl_key_version=$45,
+tenant_id=$46,
+tr_request_headers=$47,
+tr_response_headers=$48,
+type=$49,
+xml_id=$50,
+anonymous_blocking_enabled=$51,
+consistent_hash_regex=$52,
+max_origin_connections=$53,
+ecs_enabled=$54
+range_slice_block_size=$55
 WHERE id=$55
 RETURNING last_updated
 `
@@ -1778,6 +1868,7 @@ regex_remap,
 regional_geo_blocking,
 remap_text,
 routing_name,
+service_category,
 signing_algorithm,
 ssl_key_version,
 tenant_id,
@@ -1788,7 +1879,7 @@ xml_id,
 ecs_enabled,
 range_slice_block_size
 )
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55)
 RETURNING id, last_updated
 `
 }

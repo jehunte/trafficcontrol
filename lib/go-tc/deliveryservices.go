@@ -161,9 +161,15 @@ type DeliveryServiceV11 struct {
 	XMLID                    string                 `json:"xmlId"`
 }
 
-type DeliveryServiceNullableV15 DeliveryServiceNullable // this type alias should always alias the latest minor version of the deliveryservices endpoints
+type DeliveryServiceNullableV16 DeliveryServiceNullable // this type alias should always alias the latest minor version of the deliveryservices endpoints
 
 type DeliveryServiceNullable struct {
+	DeliveryServiceNullableV15
+	ServiceCategoryId *int `json:"serviceCategory" db:"service_category"`
+	ServiceCategoryName *string `json:"serviceCategoryName"`
+}
+
+type DeliveryServiceNullableV15 struct {
 	DeliveryServiceNullableV14
 	EcsEnabled          bool `json:"ecsEnabled" db:"ecs_enabled"`
 	RangeSliceBlockSize *int `json:"rangeSliceBlockSize" db:"range_slice_block_size"`
