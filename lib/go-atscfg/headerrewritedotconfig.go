@@ -36,6 +36,8 @@ const ContentTypeHeaderRewriteDotConfig = ContentTypeTextASCII
 
 const ServiceCategoryHeader = "X-CDN-SVC"
 
+const ServiceCategoryHeader = "X-CDN-SVC"
+
 const MaxOriginConnectionsNoMax = 0 // 0 indicates no limit on origin connections
 
 type HeaderRewriteDS struct {
