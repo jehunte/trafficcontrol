@@ -1813,9 +1813,9 @@ xml_id=$50,
 anonymous_blocking_enabled=$51,
 consistent_hash_regex=$52,
 max_origin_connections=$53,
-ecs_enabled=$54
+ecs_enabled=$54,
 range_slice_block_size=$55
-WHERE id=$55
+WHERE id=$56
 RETURNING last_updated
 `
 }
