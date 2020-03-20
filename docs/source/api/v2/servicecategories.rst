@@ -126,7 +126,7 @@ Request Structure
 
 	{
 		"name": "SERVICE_CATEGORY_NAME",
-            "tenantId": 1,
+        "tenantId": 1,
 	}
 
 Response Structure
