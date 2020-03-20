@@ -161,7 +161,7 @@ type DeliveryServiceV11 struct {
 	XMLID                    string                 `json:"xmlId"`
 }
 
-type DeliveryServiceNullableV16 DeliveryServiceNullable // this type alias should always alias the latest minor version of the deliveryservices endpoints
+type DeliveryServiceNullableV20 DeliveryServiceNullable // this type alias should always alias the latest minor version of the deliveryservices endpoints
 
 type DeliveryServiceNullable struct {
 	DeliveryServiceNullableV15

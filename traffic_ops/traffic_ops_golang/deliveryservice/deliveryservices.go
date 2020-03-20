@@ -184,7 +184,7 @@ func CreateV15(w http.ResponseWriter, r *http.Request) {
 }
 
 // 	TODO allow users to post names (type, cdn, etc) and get the IDs from the names. This isn't trivial to do in a single query, without dynamically building the entire insert query, and ideally inserting would be one query. But it'd be much more convenient for users. Alternatively, remove IDs from the database entirely and use real candidate keys.
-func CreateV16(w http.ResponseWriter, r *http.Request) {
+func CreateV20(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -192,18 +192,18 @@ func CreateV16(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	ds := tc.DeliveryServiceNullableV16{}
+	ds := tc.DeliveryServiceNullableV20{}
 	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
 		return
 	}
 
-	res, status, userErr, sysErr := createV16(w, r, inf, ds)
+	res, status, userErr, sysErr := createV20(w, r, inf, ds)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
 		return
 	}
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice creation was successful.", []tc.DeliveryServiceNullableV16{*res})
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice creation was successful.", []tc.DeliveryServiceNullableV20{*res})
 }
 
 func createV12(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS tc.DeliveryServiceNullableV12) (*tc.DeliveryServiceNullableV12, int, error, error) {
@@ -234,8 +234,8 @@ func createV14(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 }
 
 func createV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS tc.DeliveryServiceNullableV15) (*tc.DeliveryServiceNullableV15, int, error, error) {
-	dsV16 := tc.DeliveryServiceNullableV16{DeliveryServiceNullableV15: reqDS}
-	res, status, userErr, sysErr := createV16(w, r, inf, dsV16)
+	dsV20 := tc.DeliveryServiceNullableV20{DeliveryServiceNullableV15: reqDS}
+	res, status, userErr, sysErr := createV20(w, r, inf, dsV20)
 	if res != nil {
 		return &res.DeliveryServiceNullableV15, status, userErr, sysErr
 	}
@@ -243,7 +243,7 @@ func createV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 }
 
 // create creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
-func createV16(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS tc.DeliveryServiceNullableV16) (*tc.DeliveryServiceNullableV16, int, error, error) {
+func createV20(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS tc.DeliveryServiceNullableV20) (*tc.DeliveryServiceNullableV20, int, error, error) {
 	ds := tc.DeliveryServiceNullable(reqDS)
 	user := inf.User
 	tx := inf.Tx.Tx
@@ -403,7 +403,7 @@ func createV16(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 		return nil, http.StatusInternalServerError, nil, errors.New("error writing to audit log: " + err.Error())
 	}
 
-	dsLatest := tc.DeliveryServiceNullableV16(ds)
+	dsLatest := tc.DeliveryServiceNullableV20(ds)
 	return &dsLatest, http.StatusOK, nil, nil
 }
 
@@ -458,8 +458,10 @@ func (ds *TODeliveryService) Read() ([]interface{}, error, error, int) {
 	for _, ds := range dses {
 		switch {
 		// NOTE: it's required to handle minor version cases in a descending >= manner
-		case version.Major > 1 || version.Minor >= 5:
+		case version.Major > 1:
 			returnable = append(returnable, ds)
+		case version.Minor >= 5:
+			returnable = append(returnable, ds.DeliveryServiceNullableV15)
 		case version.Minor >= 4:
 			returnable = append(returnable, ds.DeliveryServiceNullableV14)
 		case version.Minor >= 3:
@@ -573,7 +575,7 @@ func UpdateV15(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice update was successful.", []tc.DeliveryServiceNullableV15{*res})
 }
 
-func UpdateV16(w http.ResponseWriter, r *http.Request) {
+func UpdateV20(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -583,19 +585,19 @@ func UpdateV16(w http.ResponseWriter, r *http.Request) {
 
 	id := inf.IntParams["id"]
 
-	ds := tc.DeliveryServiceNullableV16{}
+	ds := tc.DeliveryServiceNullableV20{}
 	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return
 	}
 	ds.ID = &id
 
-	res, status, userErr, sysErr := updateV16(w, r, inf, &ds)
+	res, status, userErr, sysErr := updateV20(w, r, inf, &ds)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
 		return
 	}
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice update was successful.", []tc.DeliveryServiceNullableV16{*res})
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice update was successful.", []tc.DeliveryServiceNullableV20{*res})
 }
 
 func updateV12(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *tc.DeliveryServiceNullableV12) (*tc.DeliveryServiceNullableV12, int, error, error) {
@@ -692,7 +694,7 @@ WHERE
 }
 
 func updateV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *tc.DeliveryServiceNullableV15) (*tc.DeliveryServiceNullableV15, int, error, error) {
-	dsV16 := tc.DeliveryServiceNullableV16{DeliveryServiceNullableV15: *reqDS}
+	dsV20 := tc.DeliveryServiceNullableV20{DeliveryServiceNullableV15: *reqDS}
 	// query the DB for existing 1.5 fields in order to "upgrade" this 1.4 request into a 1.5 request
 	query := `
 SELECT
@@ -702,21 +704,21 @@ FROM
 WHERE
   ds.id = $1`
 	if err := inf.Tx.Tx.QueryRow(query, *reqDS.ID).Scan(
-		&dsV16.ServiceCategoryId,
+		&dsV20.ServiceCategoryId,
 	); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, http.StatusNotFound, fmt.Errorf("delivery service ID %d not found", *dsV16.ID), nil
+			return nil, http.StatusNotFound, fmt.Errorf("delivery service ID %d not found", *dsV20.ID), nil
 		}
-		return nil, http.StatusInternalServerError, nil, fmt.Errorf("querying delivery service ID %d: %s", *dsV16.ID, err.Error())
+		return nil, http.StatusInternalServerError, nil, fmt.Errorf("querying delivery service ID %d: %s", *dsV20.ID, err.Error())
 	}
-	res, status, userErr, sysErr := updateV16(w, r, inf, &dsV16)
+	res, status, userErr, sysErr := updateV20(w, r, inf, &dsV20)
 	if res != nil {
 		return &res.DeliveryServiceNullableV15, status, userErr, sysErr
 	}
 	return nil, status, userErr, sysErr
 }
 
-func updateV16(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *tc.DeliveryServiceNullableV16) (*tc.DeliveryServiceNullableV16, int, error, error) {
+func updateV20(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *tc.DeliveryServiceNullableV20) (*tc.DeliveryServiceNullableV20, int, error, error) {
 	converted := tc.DeliveryServiceNullable(*reqDS)
 	ds := &converted
 	tx := inf.Tx.Tx
@@ -917,7 +919,7 @@ func updateV16(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 	if err := api.CreateChangeLogRawErr(api.ApiChange, "Updated ds: "+*ds.XMLID+" id: "+strconv.Itoa(*ds.ID), user, tx); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("writing change log entry: " + err.Error())
 	}
-	dsLatest := tc.DeliveryServiceNullableV16(*ds)
+	dsLatest := tc.DeliveryServiceNullableV20(*ds)
 	return &dsLatest, http.StatusOK, nil, nil
 }
 
