@@ -165,7 +165,7 @@ type DeliveryServiceNullableV20 DeliveryServiceNullable // this type alias shoul
 
 type DeliveryServiceNullable struct {
 	DeliveryServiceNullableV15
-	ServiceCategoryId *int `json:"serviceCategory" db:"service_category"`
+	ServiceCategoryId   *int    `json:"serviceCategory" db:"service_category"`
 	ServiceCategoryName *string `json:"serviceCategoryName"`
 }
 

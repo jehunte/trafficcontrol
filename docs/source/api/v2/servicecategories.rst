@@ -80,7 +80,6 @@ Response Structure
 	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
-    Content-Encoding: gzip
 	Content-Type: application/json
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: Yzr6TfhxgpZ3pbbrr4TRG4wC3PlnHDDzgs2igtz/1ppLSy2MzugqaGW4y5yzwzl5T3+7q6HWej7GQZt1XIVeZQ==
@@ -88,17 +87,17 @@ Response Structure
 	Date: Wed, 11 Mar 2020 20:02:47 GMT
 	Content-Length: 102
 
-    {
-        "response": [
-            {
-                "id": 5,
-                "lastUpdated": "2020-03-04 15:46:20-07",
-                "name": "SERVICE_CATEGORY_NAME",
-                "tenantId": 1,
-                "tenant": "TENANT_NAME"
-            }
-        ]
-    }
+        {
+            "response": [
+                {
+                    "id": 5,
+                    "lastUpdated": "2020-03-04 15:46:20-07",
+                    "name": "SERVICE_CATEGORY_NAME",
+                    "tenantId": 1,
+                    "tenant": "TENANT_NAME"
+                }
+            ]
+        }
 
 ``POST``
 ========
@@ -126,7 +125,7 @@ Request Structure
 
 	{
 		"name": "SERVICE_CATEGORY_NAME",
-        "tenantId": 1,
+                "tenantId": 1,
 	}
 
 Response Structure
@@ -145,7 +144,6 @@ Response Structure
 	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
-    Content-Encoding: gzip
 	Content-Type: application/json
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: +pJm4c3O+JTaSXNt+LP+u240Ba/SsvSSDOQ4rDc6hcyZ0FIL+iY/WWrMHhpLulRGKGY88bM4YPCMaxGn3FZ9yQ==
@@ -153,18 +151,18 @@ Response Structure
 	Date: Wed, 11 Mar 2020 20:12:20 GMT
 	Content-Length: 154
 
-{
-    "alerts": [
         {
-            "text": "serviceCategory was created.",
-            "level": "success"
+            "alerts": [
+                {
+                    "text": "serviceCategory was created.",
+                    "level": "success"
+                }
+            ],
+            "response": {
+                "id": 1,
+                "lastUpdated": "2020-03-11 14:12:20-06",
+                "name": "SERVICE_CATEGORY_NAME",
+                "tenantId": 1,
+                "tenant": null
+            }
         }
-    ],
-    "response": {
-        "id": 1,
-        "lastUpdated": "2020-03-11 14:12:20-06",
-        "name": "SERVICE_CATEGORY_NAME",
-        "tenantId": 1,
-        "tenant": null
-    }
-}
