@@ -35,24 +35,24 @@ insert into profile (name, description, type, cdn) values ('GLOBAL', 'Global Tra
 ---------------------------------
 DO
 $do$
-BEGIN
+    BEGIN
         IF NOT EXISTS (SELECT id FROM PARAMETER WHERE name = 'tm.instance_name' AND config_file = 'global') THEN
-                insert into parameter (name, config_file, value) values ('tm.instance_name', 'global', 'Traffic Ops CDN');
-                insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.instance_name' and config_file = 'global' and value = 'Traffic Ops CDN') ) ON CONFLICT (profile, parameter) DO NOTHING;
+            insert into parameter (name, config_file, value) values ('tm.instance_name', 'global', 'Traffic Ops CDN');
+            insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.instance_name' and config_file = 'global' and value = 'Traffic Ops CDN') ) ON CONFLICT (profile, parameter) DO NOTHING;
         END IF;
         IF NOT EXISTS (SELECT id FROM PARAMETER WHERE name = 'tm.toolname' AND config_file = 'global') THEN
-                insert into parameter (name, config_file, value) values ('tm.toolname', 'global', 'Traffic Ops');
-                insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.toolname' and config_file = 'global' and value = 'Traffic Ops') ) ON CONFLICT (profile, parameter) DO NOTHING;
+            insert into parameter (name, config_file, value) values ('tm.toolname', 'global', 'Traffic Ops');
+            insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.toolname' and config_file = 'global' and value = 'Traffic Ops') ) ON CONFLICT (profile, parameter) DO NOTHING;
         END IF;
         IF NOT EXISTS (SELECT id FROM PARAMETER WHERE name = 'use_tenancy' AND config_file = 'global') THEN
-                insert into parameter (name, config_file, value) values ('use_tenancy', 'global', '1');
-                insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'use_tenancy' and config_file = 'global' and value = '1') ) ON CONFLICT (profile, parameter) DO NOTHING;
+            insert into parameter (name, config_file, value) values ('use_tenancy', 'global', '1');
+            insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'use_tenancy' and config_file = 'global' and value = '1') ) ON CONFLICT (profile, parameter) DO NOTHING;
         END IF;
         IF NOT EXISTS (SELECT id FROM PARAMETER WHERE name = 'maxRevalDurationDays' AND config_file = 'regex_revalidate.config') THEN
-                insert into parameter (name, config_file, value) values ('maxRevalDurationDays', 'regex_revalidate.config', '90');
-                insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'maxRevalDurationDays' and config_file = 'regex_revalidate.config' and value = '90') ) ON CONFLICT (profile, parameter) DO NOTHING;
+            insert into parameter (name, config_file, value) values ('maxRevalDurationDays', 'regex_revalidate.config', '90');
+            insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'maxRevalDurationDays' and config_file = 'regex_revalidate.config' and value = '90') ) ON CONFLICT (profile, parameter) DO NOTHING;
         END IF;
-END
+    END
 $do$;
 
 -- parameters
@@ -805,8 +805,8 @@ insert into type (name, description, use_in_table) values ('STEERING_GEO_WEIGHT'
 
 -- users
 insert into tm_user (username, role, full_name, token, tenant_id) values ('extension',
-    (select id from role where name = 'operations'), 'Extension User, DO NOT DELETE', '91504CE6-8E4A-46B2-9F9F-FE7C15228498',
-    (select id from tenant where name = 'root')) ON CONFLICT DO NOTHING;
+                                                                          (select id from role where name = 'operations'), 'Extension User, DO NOT DELETE', '91504CE6-8E4A-46B2-9F9F-FE7C15228498',
+                                                                          (select id from tenant where name = 'root')) ON CONFLICT DO NOTHING;
 
 -- to extensions
 -- some of the old ones do not get a new place, and there will be 'gaps' in the column usage.... New to_extension add will have to take care of that.
